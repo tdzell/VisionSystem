@@ -251,9 +251,9 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
         print("save plot results to %s" % savename)
         cv2.imwrite(savename, img)
     if Detected:
-	    AlarmDetector.AlarmDetect(Detected, [0, 1, 2, 3, 4, 5, 6, 7])
+	    AlarmDetector.AlarmDetect(Detected, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
     else:
-        AlarmDetector.AlarmDetect([5], [0, 1, 2, 3, 4, 5, 6 ,7])
+        AlarmDetector.AlarmDetect([5], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
     print('TEST')
     return img
 

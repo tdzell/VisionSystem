@@ -255,7 +255,7 @@ if evaluate:
     logging('evaluating ...')
     test(0)
 else:
-    
+    max_epochs = 600
     for epoch in range(init_epoch, max_epochs): 
         train(epoch)
         # test(epoch)

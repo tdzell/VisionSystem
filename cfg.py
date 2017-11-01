@@ -1,7 +1,7 @@
 import torch
 from utils import convert2cpu
 
-def parse_cfg(cfgfile):
+def parse_cfg(cfgfile = 'yolo-voc.cfg'):
     blocks = []
     fp = open(cfgfile, 'r')
     block =  None

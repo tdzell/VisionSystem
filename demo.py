@@ -2,6 +2,7 @@ from utils import *
 from darknet import Darknet
 import cv2
 import AlarmDetector
+import pyueye
 
 
 def demo(cfgfile, weightfile):
@@ -13,6 +14,8 @@ def demo(cfgfile, weightfile):
     
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')
     out = cv2.VideoWriter('output.avi',fourcc,30.0,(640,480))
+	
+	
 	
     if m.num_classes == 20:
         namesfile = 'data/voc.names'
@@ -26,8 +29,10 @@ def demo(cfgfile, weightfile):
     if use_cuda:
         m.cuda()
 
-    cap = cv2.VideoCapture(0)
-
+    cap = cv2.VideoCapture(1)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
     if not cap.isOpened():
         print("Unable to open camera")
         exit(-1) 
@@ -40,7 +45,7 @@ def demo(cfgfile, weightfile):
             print('------')
             draw_img = plot_boxes_cv2(img, bboxes, None, class_names)
             cv2.imshow(cfgfile, draw_img)
-            out.write(draw_img)
+            #out.write(draw_img)
             cv2.waitKey(1)
         else:
              print("Unable to read image")
