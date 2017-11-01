@@ -50,7 +50,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
             namesfile = 'data/names'
 
     class_names = load_class_names(namesfile)
-	
+    
     if sharing.usegpu:
         m.cuda()
     print('Loading weights from %s... Done!' % (weightfile))
@@ -78,6 +78,11 @@ def StandardCamera(cfgfile, weightfile, useGPU):
             print('------')
             draw_img, waitsignal = plot_boxes_cv2(img, bboxes, None, class_names)
             cv2.imshow('cfgfile', draw_img)
+
+            if waitsignal == True:
+                cv2.waitKey(2000)
+                waitsignal = False
+
             #out.write(draw_img)
             cv2.waitKey(1)
         else:
@@ -141,7 +146,9 @@ class FrameThread(Thread):
                 print('------')
                 draw_img, waitsignal = plot_boxes_cv2(image, bboxes, None, self.m.class_names)
                 cv2.imshow(cfgfile, draw_img)
-                
+                if waitsignal == True:
+                    cv2.waitKey(2000)
+                    waitsignal = False
                 cv2.waitKey(200)
               
                 
@@ -160,6 +167,7 @@ if __name__ == '__main__':
     AlarmDetector.GlobeCreate()
 
     sharing.detect_min = 3
+    sharing.colorframe = 'nothing'
 
     if len(sys.argv) == 5:
         cfgfile = sys.argv[1]

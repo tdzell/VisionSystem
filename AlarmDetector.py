@@ -128,22 +128,22 @@ def AlarmDetect(DetectedClasses, ClassNames):
 				print(boltExpected)
 				#cv2.waitKey(0)
 				saveimage = True
-				colorframe = 'yellow'
+				sharing.colorframe = 'yellow'
 				print('expected: %s' % (boltExpected))
 			if boltSeen == boltExpected:
 				print('VERIFIED')
 				#cv2.waitKey(0)
-				colorframe = 'green'
+				sharing.colorframe = 'green'
 				print('expected: %s' % (boltExpected))
 			if boltSeen < boltExpected:
 				print('**ALARM**, %s bolts seen but %s expected' % (boltSeen, boltExpected))
 				print(boltSeen)
 				print(boltExpected)
 				saveimage = True
-				colorframe = 'red'
+				sharing.colorframe = 'red'
 				#cv2.waitKey(0)
 		else:
-			colorframe = 'nothing'
+			sharing.colorframe = 'nothing'
 			
 		noBoltSeen = 0
 		oneBoltSeen = 0

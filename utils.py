@@ -211,8 +211,6 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
 
 def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
     import cv2
-    global counterimage
-    colorframe = 'test'
     saveimage = False
     colors = torch.FloatTensor([[1,0,1],[0,0,1],[0,1,1],[0,1,0],[1,1,0],[1,0,0]]);
     def get_color(c, x, max_val):
@@ -258,22 +256,22 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
         AlarmDetector.AlarmDetect([5], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
 
     if saveimage == True:
-        cv2.imwrite('falsepositve/%s.jpg' % (sharing.counterimage), img)
+        cv2.imwrite('falsepositive/%s.jpg' % (sharing.counterimage), img)
         saveimage = False
         sharing.counterimage += 1
     
-    if colorframe == 'red':
+    if sharing.colorframe == 'red':
         
         img = cv2.rectangle(img, (0,0), (1920,1080), (0, 0, 255), thickness = -1)
-        colorframe = 'nothing'
+        sharing.colorframe = 'nothing'
         waitsignal = True
-    elif colorframe == 'yellow':
+    elif sharing.colorframe == 'yellow':
         img = cv2.rectangle(img, (0,0), (1920,1080), (0, 255, 255), thickness = -1)
-        colorframe = 'nothing'
+        sharing.colorframe = 'nothing'
         waitsignal = True
-    elif colorframe == 'green':
+    elif sharing.colorframe == 'green':
         img = cv2.rectangle(img, (0,0), (1920,1080), (0, 255, 0), thickness = -1)
-        colorframe = 'nothing'
+        sharing.colorframe = 'nothing'
         waitsignal = True
     else: 
         waitsignal = False
