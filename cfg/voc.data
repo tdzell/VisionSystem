@@ -1,0 +1,6 @@
+train  = data/BoltPictures/voc_train.txt
+valid  = data/BoltPictures/2007_test.txt
+names = data/voc.names
+backup = backup
+gpus = 0
+num_workers = 1
