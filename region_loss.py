@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from utils import *
+import sharing
 
 def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW, noobject_scale, object_scale, sil_thresh, seen):
     nB = target.size(0)
@@ -123,20 +124,43 @@ class RegionLoss(nn.Module):
         nW = output.data.size(3)
 
         output   = output.view(nB, nA, (5+nC), nH, nW)
-        x    = F.sigmoid(output.index_select(2, Variable(torch.cuda.LongTensor([0]))).view(nB, nA, nH, nW))
-        y    = F.sigmoid(output.index_select(2, Variable(torch.cuda.LongTensor([1]))).view(nB, nA, nH, nW))
-        w    = output.index_select(2, Variable(torch.cuda.LongTensor([2]))).view(nB, nA, nH, nW)
-        h    = output.index_select(2, Variable(torch.cuda.LongTensor([3]))).view(nB, nA, nH, nW)
-        conf = F.sigmoid(output.index_select(2, Variable(torch.cuda.LongTensor([4]))).view(nB, nA, nH, nW))
-        cls  = output.index_select(2, Variable(torch.linspace(5,5+nC-1,nC).long().cuda()))
+        
+        if sharing.usegpu == True:
+            x    = F.sigmoid(output.index_select(2, Variable(torch.cuda.LongTensor([0]))).view(nB, nA, nH, nW))
+            y    = F.sigmoid(output.index_select(2, Variable(torch.cuda.LongTensor([1]))).view(nB, nA, nH, nW))
+            w    = output.index_select(2, Variable(torch.cuda.LongTensor([2]))).view(nB, nA, nH, nW)
+            h    = output.index_select(2, Variable(torch.cuda.LongTensor([3]))).view(nB, nA, nH, nW)
+            conf = F.sigmoid(output.index_select(2, Variable(torch.cuda.LongTensor([4]))).view(nB, nA, nH, nW))
+            cls  = output.index_select(2, Variable(torch.linspace(5,5+nC-1,nC).long().cuda()))
+        
+        else:
+            x    = F.sigmoid(output.index_select(2, Variable(torch.LongTensor([0]))).view(nB, nA, nH, nW))
+            y    = F.sigmoid(output.index_select(2, Variable(torch.LongTensor([1]))).view(nB, nA, nH, nW))
+            w    = output.index_select(2, Variable(torch.LongTensor([2]))).view(nB, nA, nH, nW)
+            h    = output.index_select(2, Variable(torch.LongTensor([3]))).view(nB, nA, nH, nW)
+            conf = F.sigmoid(output.index_select(2, Variable(torch.LongTensor([4]))).view(nB, nA, nH, nW))
+            cls  = output.index_select(2, Variable(torch.linspace(5,5+nC-1,nC).long().cpu()))
+            
+            
         cls  = cls.view(nB*nA, nC, nH*nW).transpose(1,2).contiguous().view(nB*nA*nH*nW, nC)
         t1 = time.time()
         self.anchor_step = int(self.anchor_step)
-        pred_boxes = torch.FloatTensor(4, nB*nA*nH*nW).cuda()
-        grid_x = torch.linspace(0, nW-1, nW).repeat(nH,1).repeat(nB*nA, 1, 1).view(nB*nA*nH*nW).cuda()
-        grid_y = torch.linspace(0, nH-1, nH).repeat(nW,1).t().repeat(nB*nA, 1, 1).view(nB*nA*nH*nW).cuda()
-        anchor_w = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([0])).cuda()
-        anchor_h = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([1])).cuda()
+        
+        if sharing.usegpu == True:
+            pred_boxes = torch.cuda.FloatTensor(4, nB*nA*nH*nW)
+            grid_x = torch.linspace(0, nW-1, nW).repeat(nH,1).repeat(nB*nA, 1, 1).view(nB*nA*nH*nW).cuda()
+            grid_y = torch.linspace(0, nH-1, nH).repeat(nW,1).t().repeat(nB*nA, 1, 1).view(nB*nA*nH*nW).cuda()
+            anchor_w = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([0])).cuda()
+            anchor_h = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([1])).cuda()
+        
+        else:
+            pred_boxes = torch.FloatTensor(4, nB*nA*nH*nW)
+            grid_x = torch.linspace(0, nW-1, nW).repeat(nH,1).repeat(nB*nA, 1, 1).view(nB*nA*nH*nW).cpu()
+            grid_y = torch.linspace(0, nH-1, nH).repeat(nW,1).t().repeat(nB*nA, 1, 1).view(nB*nA*nH*nW).cpu()
+            anchor_w = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([0])).cpu()
+            anchor_h = torch.Tensor(self.anchors).view(nA, self.anchor_step).index_select(1, torch.LongTensor([1])).cpu()
+        
+        
         anchor_w = anchor_w.repeat(nB, 1).repeat(1, 1, nH*nW).view(nB*nA*nH*nW)
         anchor_h = anchor_h.repeat(nB, 1).repeat(1, 1, nH*nW).view(nB*nA*nH*nW)
         pred_boxes[0] = x.data + grid_x
@@ -151,17 +175,31 @@ class RegionLoss(nn.Module):
         cls_mask = (cls_mask == 1)
         nProposals = int((conf > 0.25).sum().data[0])
 
-        tx    = Variable(tx.cuda())
-        ty    = Variable(ty.cuda())
-        tw    = Variable(tw.cuda())
-        th    = Variable(th.cuda())
-        tconf = Variable(tconf.cuda())
-        tcls  = Variable(tcls.view(-1)[cls_mask].long().cuda())
-
-        coord_mask = Variable(coord_mask.cuda())
-        conf_mask  = Variable(conf_mask.cuda().sqrt())
-        cls_mask   = Variable(cls_mask.view(-1, 1).repeat(1,nC).cuda())
-        cls        = cls[cls_mask].view(-1, nC)  
+        if sharing.usegpu == True:
+        
+            tx    = Variable(tx.cuda())
+            ty    = Variable(ty.cuda())
+            tw    = Variable(tw.cuda())
+            th    = Variable(th.cuda())
+            tconf = Variable(tconf.cuda())
+            tcls  = Variable(tcls.view(-1)[cls_mask].long().cuda())
+            coord_mask = Variable(coord_mask.cuda())
+            conf_mask  = Variable(conf_mask.cuda().sqrt())
+            cls_mask   = Variable(cls_mask.view(-1, 1).repeat(1,nC).cuda())
+            cls        = cls[cls_mask].view(-1, nC)  
+        
+        else:
+            tx    = Variable(tx.cpu())
+            ty    = Variable(ty.cpu())
+            tw    = Variable(tw.cpu())
+            th    = Variable(th.cpu())
+            tconf = Variable(tconf.cpu())
+            tcls  = Variable(tcls.view(-1)[cls_mask].long().cpu())
+            coord_mask = Variable(coord_mask.cpu())
+            conf_mask  = Variable(conf_mask.cpu().sqrt())
+            cls_mask   = Variable(cls_mask.view(-1, 1).repeat(1,nC).cpu())
+            cls        = cls[cls_mask].view(-1, nC)  
+        
 
         t3 = time.time()
 

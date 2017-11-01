@@ -6,24 +6,16 @@ import torch
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from torch.autograd import Variable
-import AlarmDetector
-
+import cv2
 import struct # get_image_size
 import imghdr # get_image_size
+import sharing
 
-def GlobeCreate():
-	
-	global oneBoltSeen #Seen variables used to mark how many times within the last X frames a given detection has occured
-	global twoBoltSeen
-	global threeBoltSeen
-	global fourBoltSeen
-	outerCount = 0
-	global oneOuterSeen
-	global twoOuterSeen
-	handleCount = 0
-	global handleSeen
-	global noBoltSeen
-	AlarmDetector.GlobeCreate()
+import AlarmDetector
+
+def createglobal():
+    sharing.counterimage = 0
+
 def sigmoid(x):
     return 1.0/(math.exp(-x)+1.)
 
@@ -137,15 +129,26 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
     all_boxes = []
     output = output.view(batch*num_anchors, 5+num_classes, h*w).transpose(0,1).contiguous().view(5+num_classes, batch*num_anchors*h*w)
 
-    grid_x = torch.linspace(0, w-1, w).repeat(h,1).repeat(batch*num_anchors, 1, 1).view(batch*num_anchors*h*w).cuda()
-    grid_y = torch.linspace(0, h-1, h).repeat(w,1).t().repeat(batch*num_anchors, 1, 1).view(batch*num_anchors*h*w).cuda()
+    if sharing.usegpu == True:
+        grid_x = torch.linspace(0, w-1, w).repeat(h,1).repeat(batch*num_anchors, 1, 1).view(batch*num_anchors*h*w).cuda()
+        grid_y = torch.linspace(0, h-1, h).repeat(w,1).t().repeat(batch*num_anchors, 1, 1).view(batch*num_anchors*h*w).cuda()
+    else:
+        grid_x = torch.linspace(0, w-1, w).repeat(h,1).repeat(batch*num_anchors, 1, 1).view(batch*num_anchors*h*w).cpu()
+        grid_y = torch.linspace(0, h-1, h).repeat(w,1).t().repeat(batch*num_anchors, 1, 1).view(batch*num_anchors*h*w).cpu()
+    
     xs = torch.sigmoid(output[0]) + grid_x
     ys = torch.sigmoid(output[1]) + grid_y
 
-    anchor_w = torch.Tensor(anchors).view(num_anchors, anchor_step).index_select(1, torch.LongTensor([0])).cuda()
-    anchor_h = torch.Tensor(anchors).view(num_anchors, anchor_step).index_select(1, torch.LongTensor([1])).cuda()
-    anchor_w = anchor_w.repeat(batch, 1).repeat(1, 1, h*w).view(batch*num_anchors*h*w).cuda()
-    anchor_h = anchor_h.repeat(batch, 1).repeat(1, 1, h*w).view(batch*num_anchors*h*w).cuda()
+    anchor_w = torch.Tensor(anchors).view(num_anchors, anchor_step).index_select(1, torch.LongTensor([0]))
+    anchor_h = torch.Tensor(anchors).view(num_anchors, anchor_step).index_select(1, torch.LongTensor([1]))
+    
+    if sharing.usegpu == True:
+        anchor_w = anchor_w.repeat(batch, 1).repeat(1, 1, h*w).view(batch*num_anchors*h*w).cuda()
+        anchor_h = anchor_h.repeat(batch, 1).repeat(1, 1, h*w).view(batch*num_anchors*h*w).cuda()
+    
+    else:
+        anchor_w = anchor_w.repeat(batch, 1).repeat(1, 1, h*w).view(batch*num_anchors*h*w).cpu()
+        anchor_h = anchor_h.repeat(batch, 1).repeat(1, 1, h*w).view(batch*num_anchors*h*w).cpu()
     ws = torch.exp(output[2]) * anchor_w
     hs = torch.exp(output[3]) * anchor_h
 
@@ -208,6 +211,9 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
 
 def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
     import cv2
+    global counterimage
+    colorframe = 'test'
+    saveimage = False
     colors = torch.FloatTensor([[1,0,1],[0,0,1],[0,1,1],[0,1,0],[1,1,0],[1,0,0]]);
     def get_color(c, x, max_val):
         ratio = float(x)/max_val * 5
@@ -233,10 +239,9 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
         if len(box) >= 7 and class_names:
             cls_conf = box[5]
             cls_id = box[6]
-			
+            #Detect.append(box[6])
             if cls_id > 6:
                 cls_id = 6
-				
             print('%s: %f' % (class_names[cls_id], cls_conf))
             classes = len(class_names)
             offset = cls_id * 123457 % classes
@@ -247,15 +252,36 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
                 rgb = (red, green, blue)
             img = cv2.putText(img, class_names[cls_id], (x1,y1), cv2.FONT_HERSHEY_SIMPLEX, 1.2, rgb, 1)
         img = cv2.rectangle(img, (x1,y1), (x2,y2), rgb, 1)
+    if Detected:
+        AlarmDetector.AlarmDetect(Detected, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
+    else:
+        AlarmDetector.AlarmDetect([5], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
+
+    if saveimage == True:
+        cv2.imwrite('falsepositve/%s.jpg' % (sharing.counterimage), img)
+        saveimage = False
+        sharing.counterimage += 1
+    
+    if colorframe == 'red':
+        
+        img = cv2.rectangle(img, (0,0), (1920,1080), (0, 0, 255), thickness = -1)
+        colorframe = 'nothing'
+        waitsignal = True
+    elif colorframe == 'yellow':
+        img = cv2.rectangle(img, (0,0), (1920,1080), (0, 255, 255), thickness = -1)
+        colorframe = 'nothing'
+        waitsignal = True
+    elif colorframe == 'green':
+        img = cv2.rectangle(img, (0,0), (1920,1080), (0, 255, 0), thickness = -1)
+        colorframe = 'nothing'
+        waitsignal = True
+    else: 
+        waitsignal = False
+
     if savename:
         print("save plot results to %s" % savename)
         cv2.imwrite(savename, img)
-    if Detected:
-	    AlarmDetector.AlarmDetect(Detected, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
-    else:
-        AlarmDetector.AlarmDetect([5], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
-    print('TEST')
-    return img
+    return img, waitsignal
 
 def plot_boxes(img, boxes, savename=None, class_names=None):
     colors = torch.FloatTensor([[1,0,1],[0,0,1],[0,1,1],[0,1,0],[1,1,0],[1,0,0]]);
@@ -276,7 +302,7 @@ def plot_boxes(img, boxes, savename=None, class_names=None):
         y1 = (box[1] - box[3]/2.0) * height
         x2 = (box[0] + box[2]/2.0) * width
         y2 = (box[1] + box[3]/2.0) * height
-        
+
         rgb = (255, 0, 0)
         if len(box) >= 7 and class_names:
             cls_conf = box[5]
@@ -332,7 +358,7 @@ def image2torch(img):
     img = img.float().div(255.0)
     return img
 
-def do_detect(model, img, conf_thresh, nms_thresh, use_cuda=1):
+def do_detect(model, img, conf_thresh, nms_thresh, usecuda):
     model.eval()
     t0 = time.time()
 
@@ -351,10 +377,11 @@ def do_detect(model, img, conf_thresh, nms_thresh, use_cuda=1):
 
     t1 = time.time()
 
-    if use_cuda:
+    if usecuda:
         img = img.cuda()
-		
-    img = torch.autograd.Variable(img).cuda()
+        img = torch.autograd.Variable(img)
+    else:
+        img = torch.autograd.Variable(img).cpu()
     t2 = time.time()
 
     output = model(img)
