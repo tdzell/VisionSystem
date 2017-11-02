@@ -14,6 +14,7 @@ import torch.backends.cudnn as cudnn
 from torchvision import datasets, transforms
 from torch.autograd import Variable
 
+
 import dataset
 import random
 import math
@@ -22,7 +23,7 @@ from cfg import parse_cfg
 from region_loss import RegionLoss
 from darknet import Darknet
 from models.tiny_yolo import TinyYoloNet
-
+import sharing
 
 # Training settings
 datacfg       = sys.argv[1]
@@ -50,12 +51,12 @@ scales        = [float(scale) for scale in net_options['scales'].split(',')]
 
 #Train parameters
 max_epochs    = max_batches*batch_size//nsamples+1
-use_cuda      = True
+sharing.usegpu     = False
 seed          = int(time.time())
 eps           = 1e-5
-save_interval = 25  # epoches
+save_interval = 10  # epoches
 dot_interval  = 70  # batches
- 
+
 # Test parameters
 conf_thresh   = 0.25
 nms_thresh    = 0.4
@@ -63,7 +64,7 @@ iou_thresh    = 0.5
 
 ###############
 torch.manual_seed(seed)
-if use_cuda:
+if sharing.usegpu:
     os.environ['CUDA_VISIBLE_DEVICES'] = gpus
     torch.cuda.manual_seed(seed)
 
@@ -80,17 +81,17 @@ init_width        = model.width
 init_height       = model.height
 init_epoch        = model.seen//nsamples 
 
-#kwargs = {'num_workers': num_workers, 'pin_memory': False} if use_cuda else {}
+kwargs = {'num_workers': num_workers, 'pin_memory': True} if sharing.usegpu else {}
 test_loader = torch.utils.data.DataLoader(
     dataset.listDataset(testlist, shape=(init_width, init_height),
                    shuffle=False,
                    transform=transforms.Compose([
                        transforms.ToTensor(),
                    ]), train=False),
-    batch_size=batch_size, shuffle=False)
+    batch_size=batch_size, shuffle=False, **kwargs)
 
-if use_cuda:
-    if ngpus > 2:
+if sharing.usegpu:
+    if ngpus > 1:
         model = torch.nn.DataParallel(model).cuda()
     else:
         model = model.cuda()
@@ -122,11 +123,10 @@ def adjust_learning_rate(optimizer, batch):
 def train(epoch):
     global processed_batches
     t0 = time.time()
-    if ngpus > 2:
-        cur_model = model.module.cuda()
+    if ngpus > 1:
+        cur_model = model.module
     else:
-        cur_model = model.cuda()
-    
+        cur_model = model
     train_loader = torch.utils.data.DataLoader(
         dataset.listDataset(trainlist, shape=(init_width, init_height),
                        shuffle=True,
@@ -137,25 +137,20 @@ def train(epoch):
                        seen=cur_model.seen,
                        batch_size=batch_size,
                        num_workers=num_workers),
-        batch_size=batch_size, shuffle=False)
-    
+        batch_size=batch_size, shuffle=False, **kwargs)
+
     lr = adjust_learning_rate(optimizer, processed_batches)
     logging('epoch %d, processed %d samples, lr %f' % (epoch, epoch * len(train_loader.dataset), lr))
     model.train()
     t1 = time.time()
     avg_time = torch.zeros(9)
-    #data, target = enumerate(train_loader)
-    #data, target = Variable(data), Variable(target)
-    
-    
-    for batch_idx,(data, target) in enumerate(train_loader):
-
+    for batch_idx, (data, target) in enumerate(train_loader):
         t2 = time.time()
         adjust_learning_rate(optimizer, processed_batches)
         processed_batches = processed_batches + 1
         #if (batch_idx+1) % dot_interval == 0:
         #    sys.stdout.write('.')
-        if use_cuda:
+        if sharing.usegpu:
             data = data.cuda()
             #target= target.cuda()
         t3 = time.time()
@@ -193,6 +188,7 @@ def train(epoch):
             print('            step : %f' % (avg_time[7]/(batch_idx)))
             print('           total : %f' % (avg_time[8]/(batch_idx)))
         t1 = time.time()
+    print('')
     t1 = time.time()
     logging('training with %f samples/s' % (len(train_loader.dataset)/(t1-t0)))
     if (epoch+1) % save_interval == 0:
@@ -207,10 +203,10 @@ def test(epoch):
                 return i
 
     model.eval()
-    if ngpus > 2:
-        cur_model = model.module.cuda()
+    if ngpus > 1:
+        cur_model = model.module
     else:
-        cur_model = model.cuda()
+        cur_model = model
     num_classes = cur_model.num_classes
     anchors     = cur_model.anchors
     num_anchors = cur_model.num_anchors
@@ -219,7 +215,7 @@ def test(epoch):
     correct     = 0.0
 
     for batch_idx, (data, target) in enumerate(test_loader):
-        if use_cuda:
+        if sharing.usegpu:
             data = data.cuda()
         data = Variable(data, volatile=True)
         output = model(data).data
@@ -255,9 +251,6 @@ if evaluate:
     logging('evaluating ...')
     test(0)
 else:
-    max_epochs = 600
     for epoch in range(init_epoch, max_epochs): 
         train(epoch)
-        # test(epoch)
-		
-print('wat')
+        #test(epoch)
