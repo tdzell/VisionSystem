@@ -168,7 +168,9 @@ if __name__ == '__main__':
 
     sharing.detect_min = 3
     sharing.colorframe = 'nothing'
-
+    sharing.saveimage  = False
+    sharing.counterimage = 0
+    
     if len(sys.argv) == 5:
         cfgfile = sys.argv[1]
         weightfile = sys.argv[2]

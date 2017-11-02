@@ -10,6 +10,7 @@ import cv2
 import struct # get_image_size
 import imghdr # get_image_size
 import sharing
+from copy import copy
 
 import AlarmDetector
 
@@ -210,8 +211,13 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
     return all_boxes
 
 def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
-    import cv2
+    #import cv2
+    imgToBeSaved = copy(img)
     saveimage = False
+
+
+    
+    
     colors = torch.FloatTensor([[1,0,1],[0,0,1],[0,1,1],[0,1,0],[1,1,0],[1,0,0]]);
     def get_color(c, x, max_val):
         ratio = float(x)/max_val * 5
@@ -251,13 +257,14 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
             img = cv2.putText(img, class_names[cls_id], (x1,y1), cv2.FONT_HERSHEY_SIMPLEX, 1.2, rgb, 1)
         img = cv2.rectangle(img, (x1,y1), (x2,y2), rgb, 1)
     if Detected:
-        AlarmDetector.AlarmDetect(Detected, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
+        AlarmDetector.AlarmDetect(Detected, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], imgToBeSaved)
     else:
-        AlarmDetector.AlarmDetect([5], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
-
-    if saveimage == True:
-        cv2.imwrite('falsepositive/%s.jpg' % (sharing.counterimage), img)
-        saveimage = False
+        AlarmDetector.AlarmDetect([5], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], imgToBeSaved)
+    print(sharing.saveimage)
+    print('falsepositives/%s.jpg' % (sharing.counterimage))
+    if sharing.saveimage == True:
+        cv2.imwrite('falsepositive/%s.jpg' % (sharing.counterimage), sharing.holdimg)
+        sharing.saveimage = False
         sharing.counterimage += 1
     
     if sharing.colorframe == 'red':
