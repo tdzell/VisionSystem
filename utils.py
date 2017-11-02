@@ -233,7 +233,7 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
         y1 = int(round((box[1] - box[3]/2.0) * height))
         x2 = int(round((box[0] + box[2]/2.0) * width))
         y2 = int(round((box[1] + box[3]/2.0) * height))
-        Detected.append(box[6])
+        Detected.append(box[6]) #create a list to be passed of all detections
         if color:
             rgb = color
         else:
@@ -241,7 +241,6 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
         if len(box) >= 7 and class_names:
             cls_conf = box[5]
             cls_id = box[6]
-            #Detect.append(box[6])
             if cls_id > 6:
                 cls_id = 6
             print('%s: %f' % (class_names[cls_id], cls_conf))
@@ -256,27 +255,27 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
         img = cv2.rectangle(img, (x1,y1), (x2,y2), rgb, 1)
     
     if Detected:
-        AlarmDetector.AlarmDetect(Detected, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], imgToBeSaved)
+        AlarmDetector.AlarmDetect(Detected, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], imgToBeSaved) #if there were detections, pass them to AlarmDetector.py
     else:
-        AlarmDetector.AlarmDetect([5], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], imgToBeSaved)
+        AlarmDetector.AlarmDetect([19], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], imgToBeSaved) #AlarmDetector.py still needs to be called even if no detections occured, "no value" doesn't like to be passed, so an irrelevant class detection is passed
 
 
-    if sharing.saveimage == True:
+    if sharing.saveimage == True: #if the held image should be saved to file, than do so
         cv2.imwrite('falsepositive/%s.jpg' % (sharing.counterimage), sharing.holdimg)
         sharing.saveimage = False
-        sharing.counterimage += 1
-    
+        sharing.counterimage += 1 #keeps the names unique for each successive detection in the file | will overwrite names
+        
     if sharing.colorframe == 'red':
         
-        img = cv2.rectangle(img, (0,0), (1920,1080), (0, 0, 255), thickness = -1)
+        img = cv2.rectangle(img, (0,0), (1920,1080), (0, 0, 255), thickness = -1) #turn the image frame red
         sharing.colorframe = 'nothing'
-        waitsignal = True
+        waitsignal = True #signal to pause once the colored image frame is displayed
     elif sharing.colorframe == 'yellow':
-        img = cv2.rectangle(img, (0,0), (1920,1080), (0, 255, 255), thickness = -1)
+        img = cv2.rectangle(img, (0,0), (1920,1080), (0, 255, 255), thickness = -1) #turn the image frame yellow
         sharing.colorframe = 'nothing'
         waitsignal = True
     elif sharing.colorframe == 'green':
-        img = cv2.rectangle(img, (0,0), (1920,1080), (0, 255, 0), thickness = -1)
+        img = cv2.rectangle(img, (0,0), (1920,1080), (0, 255, 0), thickness = -1) #turn the image frame green
         sharing.colorframe = 'nothing'
         waitsignal = True
     else: 
@@ -386,6 +385,7 @@ def do_detect(model, img, conf_thresh, nms_thresh, usecuda):
         img = torch.autograd.Variable(img)
     else:
         img = torch.autograd.Variable(img).cpu()
+        
     t2 = time.time()
 
     output = model(img)
@@ -477,7 +477,7 @@ def get_image_size(fname):
                     while ord(byte) == 0xff:
                         byte = fhandle.read(1)
                     ftype = ord(byte)
-                    size = struct.unpack('>H', fhandle.read(2))[0] - 2 sss
+                    size = struct.unpack('>H', fhandle.read(2))[0] - 2
                 # We are at a SOFn block
                 fhandle.seek(1, 1)  # Skip `precision' byte.
                 height, width = struct.unpack('>HH', fhandle.read(4))

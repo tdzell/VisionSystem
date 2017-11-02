@@ -54,7 +54,7 @@ max_epochs    = max_batches*batch_size//nsamples+1
 sharing.usegpu     = False
 seed          = int(time.time())
 eps           = 1e-5
-save_interval = 10  # epoches
+save_interval = 10  # epoches  
 dot_interval  = 70  # batches
 
 # Test parameters
