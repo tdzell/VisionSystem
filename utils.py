@@ -150,6 +150,7 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
     else:
         anchor_w = anchor_w.repeat(batch, 1).repeat(1, 1, h*w).view(batch*num_anchors*h*w).cpu()
         anchor_h = anchor_h.repeat(batch, 1).repeat(1, 1, h*w).view(batch*num_anchors*h*w).cpu()
+
     ws = torch.exp(output[2]) * anchor_w
     hs = torch.exp(output[3]) * anchor_h
 
@@ -211,12 +212,9 @@ def get_region_boxes(output, conf_thresh, num_classes, anchors, num_anchors, onl
     return all_boxes
 
 def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
-    #import cv2
+
     imgToBeSaved = copy(img)
     saveimage = False
-
-
-    
     
     colors = torch.FloatTensor([[1,0,1],[0,0,1],[0,1,1],[0,1,0],[1,1,0],[1,0,0]]);
     def get_color(c, x, max_val):
@@ -256,12 +254,13 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
                 rgb = (red, green, blue)
             img = cv2.putText(img, class_names[cls_id], (x1,y1), cv2.FONT_HERSHEY_SIMPLEX, 1.2, rgb, 1)
         img = cv2.rectangle(img, (x1,y1), (x2,y2), rgb, 1)
+    
     if Detected:
         AlarmDetector.AlarmDetect(Detected, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], imgToBeSaved)
     else:
         AlarmDetector.AlarmDetect([5], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], imgToBeSaved)
-    print(sharing.saveimage)
-    print('falsepositives/%s.jpg' % (sharing.counterimage))
+
+
     if sharing.saveimage == True:
         cv2.imwrite('falsepositive/%s.jpg' % (sharing.counterimage), sharing.holdimg)
         sharing.saveimage = False
@@ -478,7 +477,7 @@ def get_image_size(fname):
                     while ord(byte) == 0xff:
                         byte = fhandle.read(1)
                     ftype = ord(byte)
-                    size = struct.unpack('>H', fhandle.read(2))[0] - 2 
+                    size = struct.unpack('>H', fhandle.read(2))[0] - 2 sss
                 # We are at a SOFn block
                 fhandle.seek(1, 1)  # Skip `precision' byte.
                 height, width = struct.unpack('>HH', fhandle.read(4))

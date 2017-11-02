@@ -13,8 +13,6 @@ from ctypes import byref
 import sharing
 
 def IDSCamera(cfgfile, weightfile, useGPU):
-        
-    #GlobeCreate()
 
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')
     out = cv2.VideoWriter('output.avi',fourcc,30.0,(640,480))
@@ -64,7 +62,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
     cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
     if not cap.isOpened():
         print("Unable to open camera")
-        exit(-1) 
+        exit(-1)
 
     while True:
 

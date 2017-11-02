@@ -131,7 +131,6 @@ def AlarmDetect(DetectedClasses, ClassNames, imgToBeSaved):
             if boltSeen > boltExpected:
                 print('CONFUSED: MORE BOLTS SEEN THAN EXPECTED')
                 print(boltSeen)
-                print(boltExpected)
                 #cv2.waitKey(0)
                 sharing.saveimage = True
                 sharing.colorframe = 'yellow'
