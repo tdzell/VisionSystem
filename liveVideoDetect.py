@@ -3,8 +3,6 @@ from darknet import Darknet
 import cv2
 import AlarmDetector
 
-import pyueye
-from pyueye import ueye
 from pyueye_example_camera import Camera
 from pyueye_example_utils import *
 import numpy as np
@@ -14,9 +12,11 @@ import sharing
 
 def IDSCamera(cfgfile, weightfile, useGPU):
     
+    from pyueye import ueye #importing this too early would require IDS camera drivers to be installed just to run the "StandardCamera" code
+    
     ### initialization for creation of a .avi file for sharing of proof of concept
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-    out = cv2.VideoWriter('output.avi',fourcc,30.0,(640,480))
+    out = cv2.VideoWriter('output.avi',fourcc,25.0,(640,480))
 
     
     ### IDS camera initializations
@@ -24,11 +24,22 @@ def IDSCamera(cfgfile, weightfile, useGPU):
     cam.init()
     cam.set_colormode(ueye.IS_CM_BGR8_PACKED)
     cam.alloc()
-    cam.capture_video()
+    cam.capture_video() 
     
     ### startup of thread that pulls image frames from the IDS camera
     thread = FrameThread(cam, 1, cfgfile, weightfile, useGPU)
     thread.start()
+    loop = True
+    
+    while sharing.loop:
+        cv2.waitKey(1000)
+    thread.join()
+    cam.stop_video()
+    cam.exit()
+    
+
+    
+    
     
     
 def StandardCamera(cfgfile, weightfile, useGPU):
@@ -55,7 +66,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
     
     ### initialization for creation of a .avi file for sharing of proof of concept
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-    out = cv2.VideoWriter('output.avi',fourcc,30.0,(640,480))
+    out = cv2.VideoWriter('output.avi',fourcc,4.0,(640,480))
     
     ### initialization of pulling image frames from generic USB camera using openCV
     cap = cv2.VideoCapture(0)
@@ -78,7 +89,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
             print('------')
             draw_img, waitsignal = plot_boxes_cv2(img, bboxes, None, class_names) #draw boxes associated with detections onto the base images | AlarmDetection.py is called in here
             cv2.imshow('cfgfile', draw_img) #show the image frame that now has detections drawn onto it | draw_image will be entirely green/yellow/red after a judgement is made by AlarmDetection.py for verification or alarm
-
+            out.write(draw_img)
             if waitsignal == True: #if green/yellow/red screen is being shown by draw_img, leave it in place for two seconds instead of continuing detections
                 cv2.waitKey(2000)
                 waitsignal = False
@@ -90,7 +101,6 @@ def StandardCamera(cfgfile, weightfile, useGPU):
         else:
              print("Unable to read image")
              exit(-1)
-             
 
     
     
@@ -107,6 +117,9 @@ class FrameThread(Thread):
         self.m.load_weights(weightfile)
         self.useGPU = useGPU
         sharing.usegpu = useGPU
+        sharing.loop = True
+        fourcc = cv2.VideoWriter_fourcc(*'DIVX')
+        self.out = cv2.VideoWriter('output.avi',fourcc,4.0,(640,480))
         if self.m.num_classes == 20:
             namesfile = 'data/voc.names'
         elif self.m.num_classes == 80:
@@ -131,7 +144,15 @@ class FrameThread(Thread):
                                            
             if ret == ueye.IS_SUCCESS:
                 self.notify(ImageData(self.cam.handle(), img_buffer))
+    
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                self.running = False
+                sharing.loop = False
+                break
+    
 
+
+    
 
     def notify(self, image_data):
 
@@ -148,10 +169,11 @@ class FrameThread(Thread):
                 print('------')
                 draw_img, waitsignal = plot_boxes_cv2(image, bboxes, None, self.m.class_names)
                 cv2.imshow(cfgfile, draw_img)
+                self.out.write(draw_img)
                 if waitsignal == True:
                     cv2.waitKey(2000)
                     waitsignal = False
-                cv2.waitKey(200)
+                cv2.waitKey(150)
               
                 
 ############################################
@@ -182,7 +204,7 @@ if __name__ == '__main__':
             sharing.usegpu = True
         else:
             sharing.usegpu = False
-		
+        
         if cameraUsage == 'IDS': #If "IDS" is the final argument given, use the IDS Camera code, otherwise use the generic USB camera code
             IDSCamera(cfgfile, weightfile, useGPU)
         else:
