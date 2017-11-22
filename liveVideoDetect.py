@@ -58,7 +58,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
     if not cap.isOpened():
         print("Unable to open camera")
         exit(-1)
-####################
+
     num_workers = 2
     input_q = Queue(4)
     output_q = Queue(4)
@@ -76,7 +76,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
 
     class_names = load_class_names(namesfile)    
         
-    for x in range(200):
+    while True:
         
         res, img = cap.read()
             
@@ -106,8 +106,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
     cv2.destroyAllWindows()
         
         
-#####################        
-    
+   
 def Standard_worker(input_q, output_q, cfgfile, weightfile, useGPU):
     
     
@@ -144,15 +143,9 @@ def Standard_worker(input_q, output_q, cfgfile, weightfile, useGPU):
         output_q.put((img, do_detect(m, sized, 0.4, 0.4, useGPU)))
             
 
-    #################################################
     
         
-    
-    
-    
-    
-    
-  ###########################################################  
+
 class FrameThread(Thread):
     def __init__(self, cam, views, cfgfile, weightfile, useGPU, copy=True):
         super(FrameThread, self).__init__()
@@ -225,7 +218,7 @@ class FrameThread(Thread):
                 cv2.waitKey(100)
               
                 
-############################################
+
 if __name__ == '__main__':
 
     AlarmDetector.GlobeCreate() #initializes module level global counters for AlarmDetector.py
