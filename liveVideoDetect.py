@@ -28,18 +28,111 @@ def IDSCamera(cfgfile, weightfile, useGPU):
     cam.alloc()
     cam.capture_video() 
     
-    ### startup of thread that pulls image frames from the IDS camera
-    thread = FrameThread(cam, 1, cfgfile, weightfile, useGPU)
-    thread.start()
-    loop = True
+    fourcc = cv2.VideoWriter_fourcc(*'DIVX')
+    out = cv2.VideoWriter('output.avi',fourcc,4.0,(640,480))
+    num_workers = 2
+    input_q = Queue(2)
+    output_q = Queue(2)
+    pool = Pool(num_workers, IDS_worker, (input_q, output_q, cfgfile, weightfile, useGPU))
+       
+    timeout = 1000
+    running = True
+    m = Darknet(cfgfile)
+    m.print_network()
+    m.load_weights(weightfile)
+    sharing.usegpu = useGPU
+    sharing.loop = True
+        
+        
+    if m.num_classes == 20:
+        namesfile = 'data/voc.names'
+    elif m.num_classes == 80:
+        namesfile = 'data/coco.names'
+    else:
+        namesfile = 'data/names'
+        
+    m.class_names = load_class_names(namesfile)
+ 
+        
+    if useGPU:
+        m.cuda()
+    print('Loading weights from %s... Done!' % (weightfile))
+
+    while running:
+        img_buffer = ImageBuffer()
+        ret = ueye.is_WaitForNextImage(cam.handle(),
+                                       timeout,
+                                       img_buffer.mem_ptr,
+                                       img_buffer.mem_id)
+                                           
+        if ret == ueye.IS_SUCCESS:
+            input_q.put(ImageData(cam.handle(), img_buffer))
     
-    while sharing.loop:
-        cv2.waitKey(1000)
-    thread.join()
-    cam.stop_video()
-    cam.exit()
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            running = False
+            sharing.loop = False
+            
+            cam.stop_video()
+            cam.exit()
+			pool.terminate()
+            cv2.destroyAllWindows()
+            break
+    
+        img, bboxes = output_q.get()
+        print('------')
+        draw_img, waitsignal = plot_boxes_cv2(img, bboxes, None, class_names) #draw boxes associated with detections onto the base images | AlarmDetection.py is called in here
+        cv2.imshow('cfgfile', draw_img) #show the image frame that now has detections drawn onto it | draw_image will be entirely green/yellow/red after a judgement is made by AlarmDetection.py for verification or alarm
+        
+        '''uncomment the following line to record video | file is named output.avi and will overwrite any existing files with same name'''        
+        #out.write(draw_img)
+		
+		cv2.waitKey(100)
+		
     
 
+def IDSworker(input_q, output_q, cfgfile, weightfile, useGPU):
+
+    sharing.detect_min = 3
+    sharing.colorframe = 'nothing'
+    sharing.saveimage  = False
+    sharing.counterimage = 0
+    
+    if useGPU:
+        sharing.usegpu = True
+    else:
+        sharing.usegpu = False
+    
+    ### initialization of neural network based upon the specified config and weights files
+    m = Darknet(cfgfile)
+    m.print_network()
+    m.load_weights(weightfile)
+    
+        
+    
+    ### if GPU optimizations are enabled, do some initialization
+    if sharing.usegpu:
+        m.cuda()
+    print('Loading weights from %s... Done!' % (weightfile))
+
+    
+    while True:
+        
+        input_q.get(image)
+        image = image_data.as_1d_image()
+        image_data.unlock()
+        sized = cv2.resize(image, (m.width, m.height))
+        bboxes = do_detect(m, sized, 0.4, 0.4, useGPU) #third value in this call sets the confidence threshold for object detection
+        print('------')
+        output_q.put((img, do_detect(m, sized, 0.4, 0.4, useGPU)))
+        #out.write(draw_img)
+            
+
+        if waitsignal == True:
+            cv2.waitKey(2000)
+            waitsignal = False
+            
+        
+               
     
     
     
@@ -144,79 +237,6 @@ def Standard_worker(input_q, output_q, cfgfile, weightfile, useGPU):
             
 
     
-        
-
-class FrameThread(Thread):
-    def __init__(self, cam, views, cfgfile, weightfile, useGPU, copy=True):
-        super(FrameThread, self).__init__()
-        self.timeout = 1000
-        self.cam = cam
-        self.running = True
-        self.views = views
-        self.copy = copy
-        self.m = Darknet(cfgfile)
-        self.m.print_network()
-        self.m.load_weights(weightfile)
-        self.useGPU = useGPU
-        sharing.usegpu = useGPU
-        sharing.loop = True
-        fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-        self.out = cv2.VideoWriter('output.avi',fourcc,4.0,(640,480))
-        if self.m.num_classes == 20:
-            namesfile = 'data/voc.names'
-        elif self.m.num_classes == 80:
-            namesfile = 'data/coco.names'
-        else:
-            namesfile = 'data/names'
-        
-        self.m.class_names = load_class_names(namesfile)
- 
-        
-        if self.useGPU:
-            self.m.cuda()
-        print('Loading weights from %s... Done!' % (weightfile))
-    def run(self):
-
-        while self.running:
-            img_buffer = ImageBuffer()
-            ret = ueye.is_WaitForNextImage(self.cam.handle(),
-                                           self.timeout,
-                                           img_buffer.mem_ptr,
-                                           img_buffer.mem_id)
-                                           
-            if ret == ueye.IS_SUCCESS:
-                self.notify(ImageData(self.cam.handle(), img_buffer))
-    
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                self.running = False
-                sharing.loop = False
-                break
-    
-
-
-    
-
-    def notify(self, image_data):
-
-        if self.views:
-            if type(self.views) is not list:
-                self.views = [self.views]
-            
-            for view in self.views:
- 
-                image = image_data.as_1d_image()
-                image_data.unlock()
-                sized = cv2.resize(image, (self.m.width, self.m.height))
-                bboxes = do_detect(self.m, sized, 0.4, 0.4, self.useGPU) #third value in this call sets the confidence threshold for object detection
-                print('------')
-                draw_img, waitsignal = plot_boxes_cv2(image, bboxes, None, self.m.class_names)
-                cv2.imshow(cfgfile, draw_img)
-                self.out.write(draw_img)
-                if waitsignal == True:
-                    cv2.waitKey(2000)
-                    waitsignal = False
-                cv2.waitKey(100)
-              
                 
 
 if __name__ == '__main__':
