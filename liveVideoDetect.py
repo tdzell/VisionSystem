@@ -147,7 +147,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
     if not cap.isOpened():
         print("Unable to open camera")
         exit(-1)
-
+####################
     num_workers = 2
     input_q = Queue(4)
     output_q = Queue(4)
@@ -165,7 +165,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
 
     class_names = load_class_names(namesfile)    
         
-    while True:
+    for x in range(200):
         
         res, img = cap.read()
             
@@ -195,7 +195,8 @@ def StandardCamera(cfgfile, weightfile, useGPU):
     cv2.destroyAllWindows()
         
         
-   
+#####################        
+    
 def Standard_worker(input_q, output_q, cfgfile, weightfile, useGPU):
     
     
@@ -232,9 +233,91 @@ def Standard_worker(input_q, output_q, cfgfile, weightfile, useGPU):
         output_q.put((img, do_detect(m, sized, 0.4, 0.4, useGPU)))
             
 
+    #################################################
     
-                
+<<<<<<< HEAD
+=======
+        
+    
+    
+    
+    
+    
+  ###########################################################  
+class FrameThread(Thread):
+    def __init__(self, cam, views, cfgfile, weightfile, useGPU, copy=True):
+        super(FrameThread, self).__init__()
+        self.timeout = 1000
+        self.cam = cam
+        self.running = True
+        self.views = views
+        self.copy = copy
+        self.m = Darknet(cfgfile)
+        self.m.print_network()
+        self.m.load_weights(weightfile)
+        self.useGPU = useGPU
+        sharing.usegpu = useGPU
+        sharing.loop = True
+        fourcc = cv2.VideoWriter_fourcc(*'DIVX')
+        self.out = cv2.VideoWriter('output.avi',fourcc,4.0,(640,480))
+        if self.m.num_classes == 20:
+            namesfile = 'data/voc.names'
+        elif self.m.num_classes == 80:
+            namesfile = 'data/coco.names'
+        else:
+            namesfile = 'data/names'
+        
+        self.m.class_names = load_class_names(namesfile)
+ 
+        
+        if self.useGPU:
+            self.m.cuda()
+        print('Loading weights from %s... Done!' % (weightfile))
+    def run(self):
 
+        while self.running:
+            img_buffer = ImageBuffer()
+            ret = ueye.is_WaitForNextImage(self.cam.handle(),
+                                           self.timeout,
+                                           img_buffer.mem_ptr,
+                                           img_buffer.mem_id)
+                                           
+            if ret == ueye.IS_SUCCESS:
+                self.notify(ImageData(self.cam.handle(), img_buffer))
+    
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                self.running = False
+                sharing.loop = False
+                break
+    
+
+
+    
+
+    def notify(self, image_data):
+
+        if self.views:
+            if type(self.views) is not list:
+                self.views = [self.views]
+            
+            for view in self.views:
+ 
+                image = image_data.as_1d_image()
+                image_data.unlock()
+                sized = cv2.resize(image, (self.m.width, self.m.height))
+                bboxes = do_detect(self.m, sized, 0.4, 0.4, self.useGPU) #third value in this call sets the confidence threshold for object detection
+                print('------')
+                draw_img, waitsignal = plot_boxes_cv2(image, bboxes, None, self.m.class_names)
+                cv2.imshow(cfgfile, draw_img)
+                self.out.write(draw_img)
+                if waitsignal == True:
+                    cv2.waitKey(2000)
+                    waitsignal = False
+                cv2.waitKey(100)
+              
+>>>>>>> parent of 8856ca7... Readded While True
+                
+############################################
 if __name__ == '__main__':
 
     AlarmDetector.GlobeCreate() #initializes module level global counters for AlarmDetector.py
