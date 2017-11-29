@@ -3,6 +3,7 @@ from darknet import Darknet
 import cv2
 import AlarmDetector
 
+from pyueye import ueye #importing this too early would require IDS camera drivers to be installed just to run the "StandardCamera" code
 from pyueye_example_camera import Camera
 from pyueye_example_utils import *
 import numpy as np
@@ -14,7 +15,7 @@ import sharing
 
 def IDSCamera(cfgfile, weightfile, useGPU):
     
-    from pyueye import ueye #importing this too early would require IDS camera drivers to be installed just to run the "StandardCamera" code
+    
     
     ### initialization for creation of a .avi file for sharing of proof of concept
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')
@@ -28,8 +29,6 @@ def IDSCamera(cfgfile, weightfile, useGPU):
     cam.alloc()
     cam.capture_video() 
     
-    fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-    out = cv2.VideoWriter('output.avi',fourcc,4.0,(640,480))
     num_workers = 2
     input_q = Queue(2)
     output_q = Queue(2)
@@ -38,8 +37,6 @@ def IDSCamera(cfgfile, weightfile, useGPU):
     timeout = 1000
     running = True
     m = Darknet(cfgfile)
-    m.print_network()
-    m.load_weights(weightfile)
     sharing.usegpu = useGPU
     sharing.loop = True
         
@@ -57,8 +54,10 @@ def IDSCamera(cfgfile, weightfile, useGPU):
     if useGPU:
         m.cuda()
     print('Loading weights from %s... Done!' % (weightfile))
-
+	
+			
     while running:
+	
         img_buffer = ImageBuffer()
         ret = ueye.is_WaitForNextImage(cam.handle(),
                                        timeout,
@@ -66,15 +65,18 @@ def IDSCamera(cfgfile, weightfile, useGPU):
                                        img_buffer.mem_id)
                                            
         if ret == ueye.IS_SUCCESS:
-            input_q.put(ImageData(cam.handle(), img_buffer))
-    
+            image_data = ImageData(cam.handle(), img_buffer)
+            image = image_data.as_1d_image()
+            image_data.unlock()
+			input_q.put(image)
+			
         if cv2.waitKey(1) & 0xFF == ord('q'):
             running = False
             sharing.loop = False
-            
+                
             cam.stop_video()
             cam.exit()
-			pool.terminate()
+            pool.terminate()
             cv2.destroyAllWindows()
             break
     
@@ -85,12 +87,12 @@ def IDSCamera(cfgfile, weightfile, useGPU):
         
         '''uncomment the following line to record video | file is named output.avi and will overwrite any existing files with same name'''        
         #out.write(draw_img)
-		
-		cv2.waitKey(100)
-		
+        
+        cv2.waitKey(100)
+        
     
 
-def IDSworker(input_q, output_q, cfgfile, weightfile, useGPU):
+def IDS_worker(input_q, output_q, cfgfile, weightfile, useGPU):
 
     sharing.detect_min = 3
     sharing.colorframe = 'nothing'
@@ -114,22 +116,16 @@ def IDSworker(input_q, output_q, cfgfile, weightfile, useGPU):
         m.cuda()
     print('Loading weights from %s... Done!' % (weightfile))
 
-    
+    cv2.waitKey(5000)
     while True:
         
         input_q.get(image)
-        image = image_data.as_1d_image()
-        image_data.unlock()
+        
         sized = cv2.resize(image, (m.width, m.height))
         bboxes = do_detect(m, sized, 0.4, 0.4, useGPU) #third value in this call sets the confidence threshold for object detection
         print('------')
-        output_q.put((img, do_detect(m, sized, 0.4, 0.4, useGPU)))
+        output_q.put((image, do_detect(m, sized, 0.4, 0.4, useGPU)))
         #out.write(draw_img)
-            
-
-        if waitsignal == True:
-            cv2.waitKey(2000)
-            waitsignal = False
             
         
                
