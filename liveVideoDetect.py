@@ -35,13 +35,13 @@ def IDSCamera(cfgfile, weightfile, useGPU):
     pool = Pool(num_workers, IDS_worker, (input_q, output_q, cfgfile, weightfile, useGPU))
        
     timeout = 1000
-    running = True
+    running = True 
     m = Darknet(cfgfile)
     sharing.usegpu = useGPU 
     sharing.loop = True
         
         
-    if m.num_classes == 20:
+    if m.num_classes == 20: 	 
         namesfile = 'data/voc.names'
     elif m.num_classes == 80:
         namesfile = 'data/coco.names'
