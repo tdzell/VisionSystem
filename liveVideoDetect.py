@@ -37,7 +37,7 @@ def IDSCamera(cfgfile, weightfile, useGPU):
     timeout = 1000
     running = True
     m = Darknet(cfgfile)
-    sharing.usegpu = useGPU
+    sharing.usegpu = useGPU 
     sharing.loop = True
         
         
