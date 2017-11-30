@@ -134,13 +134,17 @@ def AlarmDetect(DetectedClasses, ClassNames, imgToBeSaved):
             if boltSeen > boltExpected:
                 print('||CONFUSED:, %s bolts seen but %s expected' % (boltSeen, boltExpected))
                 sharing.saveimage = True #mark that the held image should be saved to file by the calling script
+                sharing.savefolder = 'falsepositives'
                 sharing.colorframe = 'yellow' #mark that a yellow screen should be returned instead of normal detection feed
             if boltSeen == boltExpected:
                 print('VERIFIED, %s bolts expected' % (boltExpected))
+                sharing.saveimage = True #mark that the held image should be saved to file by the calling script
+                sharing.savefolder = 'verified'
                 sharing.colorframe = 'green' #mark that a green screen should be returned instead of normal detection feed
             if boltSeen < boltExpected:
                 print('**ALARM**, %s bolts seen but %s expected' % (boltSeen, boltExpected))
                 sharing.saveimage = True #mark that the held image should be saved to file by the calling script
+                sharing.savefolder = 'falsepositives'
                 sharing.colorframe = 'red' #mark that a red screen should be returned instead of normal detection feed
             #cv2.waitKey(0)
         else:

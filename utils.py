@@ -24,7 +24,7 @@ def softmax(x):
     x = torch.exp(x - torch.max(x))
     x = x/x.sum()
     return x
-
+    
 
 def bbox_iou(box1, box2, x1y1x2y2=True):
     if x1y1x2y2:
@@ -261,7 +261,7 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
 
 
     if sharing.saveimage == True: #if the held image should be saved to file, than do so
-        cv2.imwrite('falsepositive/%s.jpg' % (sharing.counterimage), sharing.holdimg)
+        cv2.imwrite('%s/%s.jpg' % (sharing.savefolder, sharing.counterimage), sharing.holdimg)
         sharing.saveimage = False
         sharing.counterimage += 1 #keeps the names unique for each successive detection in the file | will overwrite names
         
