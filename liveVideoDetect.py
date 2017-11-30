@@ -12,6 +12,7 @@ from multiprocessing import Queue, Pool
 from threading import Thread
 from ctypes import byref
 import sharing
+import time
 
 def IDSCamera(cfgfile, weightfile, useGPU):
     
@@ -22,8 +23,8 @@ def IDSCamera(cfgfile, weightfile, useGPU):
     cam.set_colormode(ueye.IS_CM_BGR8_PACKED)
     cam.alloc()
     cam.capture_video() 
-    input_q = Queue(4)
-    output_q = Queue(4)
+    input_q = Queue(8)
+    output_q = Queue(8)
     ### startup of thread that pulls image frames from the IDS camera
     thread = FrameThread(cam, 1, cfgfile, weightfile, useGPU, input_q, output_q)
     thread.start()
@@ -44,7 +45,7 @@ def IDSCamera(cfgfile, weightfile, useGPU):
         
     class_names = load_class_names(namesfile)
     
-    num_workers = 3
+    num_workers = 2
     pool = Pool(num_workers, IDS_worker, (input_q, output_q, cfgfile, weightfile, useGPU))
     
     while loop:
@@ -110,7 +111,6 @@ def IDS_worker(input_q, output_q, cfgfile, weightfile, useGPU):
     #third value in this call sets the confidence threshold for object detection
         output_q.put((image, do_detect(m, sized, 0.4, 0.4, useGPU)))
         #out.write(draw_img)
-            
                   
     
     
@@ -167,7 +167,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
             waitsignal = False
     
         cv2.waitKey(3) #neccessary to ensure this loop does not attempt to pull new images from the USB camera too quickly
-        
+        time.sleep(0.05)
             
         
   #      if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -268,8 +268,8 @@ class FrameThread(Thread):
                                            img_buffer.mem_id)
             if ret == ueye.IS_SUCCESS:
                 self.notify(ImageData(self.cam.handle(), img_buffer))
-          
-            cv2.waitKey(150)
+            cv2.waitKey(100)
+            time.sleep(0.01)
 
     
 
