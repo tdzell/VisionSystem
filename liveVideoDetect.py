@@ -32,7 +32,7 @@ def IDSCamera(cfgfile, weightfile, useGPU):
     m = Darknet(cfgfile)
     ### initialization for creation of a .avi file for sharing of proof of concept
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-    out = cv2.VideoWriter('output.avi',fourcc,4.0,(480,360))
+    out = cv2.VideoWriter('output.avi',fourcc,5.0,(480, 360))
     
     if m.num_classes == 20:
             namesfile = 'data/voc.names'
@@ -64,13 +64,20 @@ def IDSCamera(cfgfile, weightfile, useGPU):
         if cv2.waitKey(1) & 0xFF == ord('q'):
             loop = False
             out.release()
-            thread.join()
-            cam.stop_video()
-            cam.exit()
             cv2.destroyAllWindows()
+            thread.stop()
+            thread.join()
+            print('join')
+            pool.terminate()
+            print('terminate')
+            cam.stop_video()
+            print('stop_video')
+            cam.exit()
+            print('cam exit')
+
             break
             
-    
+    print('IDS_Camera close')
         
     
 
@@ -91,8 +98,6 @@ def IDS_worker(input_q, output_q, cfgfile, weightfile, useGPU):
     m.print_network()
     m.load_weights(weightfile)
     
-        
-    
     ### if GPU optimizations are enabled, do some initialization
     if sharing.usegpu:
         m.cuda()
@@ -106,8 +111,7 @@ def IDS_worker(input_q, output_q, cfgfile, weightfile, useGPU):
         output_q.put((image, do_detect(m, sized, 0.4, 0.4, useGPU)))
         #out.write(draw_img)
             
-        
-               
+                  
     
     
     
@@ -235,8 +239,6 @@ class FrameThread(Thread):
         self.useGPU = useGPU
         sharing.usegpu = useGPU
         sharing.loop = True
-        fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-        self.out = cv2.VideoWriter('output.avi',fourcc,4.0,(640,480))
         
         
         self.input_q = input_q
@@ -264,12 +266,9 @@ class FrameThread(Thread):
                                            self.timeout,
                                            img_buffer.mem_ptr,
                                            img_buffer.mem_id)
-                                           
             if ret == ueye.IS_SUCCESS:
                 self.notify(ImageData(self.cam.handle(), img_buffer))
-    
-            
-        
+          
             cv2.waitKey(150)
 
     
@@ -286,7 +285,10 @@ class FrameThread(Thread):
                 image_data.unlock()
                 self.input_q.put(image)
 
-                
+    def stop(self):
+        
+        self.running = False
+        
                 
 ############################################
 if __name__ == '__main__':
