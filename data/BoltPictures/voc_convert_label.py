@@ -24,7 +24,7 @@ def convert(size, box):
     return (x,y,w,h)
 
 def convert_annotation(image_id):
-    in_file = open('bumperannotations/%s.xml'%(image_id))
+    in_file = open('Training_Annotations/%s.xml'%(image_id))
     out_file = open('labels/%s.txt'%(image_id), 'w')
     tree=ET.parse(in_file)
     root = tree.getroot()
@@ -51,7 +51,7 @@ for image_set in sets:
     image_ids = open('ImageSets/Main/%s.txt'%(image_set)).read().strip().split()
     list_file = open('%s.txt'%(image_set), 'w')
     for image_id in image_ids:
-        list_file.write('%s/JPEGImages/%s.jpg\n'%(wd, image_id))
+        list_file.write('%s/Training_Images/%s.jpg\n'%(wd, image_id))
         convert_annotation(image_id)
         convert_annotation(image_id)
     list_file.close()

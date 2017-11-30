@@ -1,4 +1,4 @@
-train  = data/BoltPictures/voc_train.txt
+train  = data/BoltPictures/train.txt
 valid  = data/BoltPictures/2007_test.txt
 names = data/voc.names
 backup = backup
