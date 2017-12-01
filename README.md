@@ -42,7 +42,7 @@ Arguments:
 	weights file:
 		###the weights file and config file must both utilize the same YOLO model
 		
-		'backup/000425.weights' for "full YOLO" bolt detection model
+		'backup/IDSRefined.weights' for "full YOLO" bolt detection model
 		'yolo-voc.weights' for "full YOLO" PASCAL VOC detection model (detects people, etc)
 		
 		'backup_multidetect2/007800.weights' for "tiny YOLO" bolt detection model
