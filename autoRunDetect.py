@@ -1,3 +1,4 @@
+import pyximport; pyximport.install()
 from utils import *
 from darknet import Darknet
 import cv2
@@ -162,7 +163,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
         img, bboxes = output_q.get()
         print('------')
         draw_img, waitsignal = plot_boxes_cv2(img, bboxes, None, class_names) #draw boxes associated with detections onto the base images | AlarmDetection.py is called in here
-        cv2.imshow('cfgfile', draw_img) #show the image frame that now has detections drawn onto it | draw_image will be entirely green/yellow/red after a judgement is made by AlarmDetection.py for verification or alarm
+        #cv2.imshow('cfgfile', draw_img) #show the image frame that now has detections drawn onto it | draw_image will be entirely green/yellow/red after a judgement is made by AlarmDetection.py for verification or alarm
         
         '''uncomment the following line to record video | file is named output.avi and will overwrite any existing files with same name'''        
         #out.write(draw_img)

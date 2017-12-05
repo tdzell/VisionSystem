@@ -1,6 +1,5 @@
 import sys
 import time
-from PIL import Image, ImageDraw
 from models.tiny_yolo import TinyYoloNet
 from utils import *
 from darknet import Darknet
@@ -68,41 +67,6 @@ def detect_cv2(cfgfile, weightfile, imgfile):
 
     class_names = load_class_names(namesfile)
     plot_boxes_cv2(img, boxes, savename='predictions.jpg', class_names=class_names)
-
-def detect_skimage(cfgfile, weightfile, imgfile):
-    from skimage import io
-    from skimage.transform import resize
-    m = Darknet(cfgfile)
-
-    m.print_network()
-    m.load_weights(weightfile)
-    print('Loading weights from %s... Done!' % (weightfile))
-
-    if m.num_classes == 20:
-        namesfile = 'data/voc.names'
-    elif m.num_classes == 80:
-        namesfile = 'data/coco.names'
-    else:
-        namesfile = 'data/names'
-    
-    use_cuda = 1
-    if use_cuda:
-        m.cuda()
-
-    img = io.imread(imgfile)
-    sized = resize(img, (m.width, m.height)) * 255
-    
-    for i in range(2):
-        start = time.time()
-        boxes = do_detect(m, sized, 0.5, 0.4, use_cuda)
-        finish = time.time()
-        if i == 1:
-            print('%s: Predicted in %f seconds.' % (imgfile, (finish-start)))
-
-    class_names = load_class_names(namesfile)
-    plot_boxes_cv2(img, boxes, savename='predictions.jpg', class_names=class_names)
-
-
 
 
 if __name__ == '__main__':
