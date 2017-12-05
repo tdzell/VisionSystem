@@ -48,6 +48,8 @@ def IDSCamera(cfgfile, weightfile, useGPU):
     num_workers = 2
     pool = Pool(num_workers, IDS_worker, (input_q, output_q, cfgfile, weightfile, useGPU))
     
+
+    
     while loop:
         cv2.waitKey(10)
         image, bboxes = output_q.get()
@@ -147,8 +149,11 @@ def StandardCamera(cfgfile, weightfile, useGPU):
             namesfile = 'C:/Users/Catharina/Documents/GitHub/VisionSystem/data/names'
 
     class_names = load_class_names(namesfile)    
-        
-    while True:
+    
+    cv2.namedWindow('cfgfile', cv2.WND_PROP_FULLSCREEN)          
+    cv2.setWindowProperty('cfgfile', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    
+    while True
         
         res, img = cap.read()
             
@@ -157,7 +162,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
         img, bboxes = output_q.get()
         print('------')
         draw_img, waitsignal = plot_boxes_cv2(img, bboxes, None, class_names) #draw boxes associated with detections onto the base images | AlarmDetection.py is called in here
-        cv2.imshow('cfgfile', draw_img) #show the image frame that now has detections drawn onto it | draw_image will be entirely green/yellow/red after a judgement is made by AlarmDetection.py for verification or alarm
+        #cv2.imshow('cfgfile', draw_img) #show the image frame that now has detections drawn onto it | draw_image will be entirely green/yellow/red after a judgement is made by AlarmDetection.py for verification or alarm
         
         '''uncomment the following line to record video | file is named output.avi and will overwrite any existing files with same name'''        
         #out.write(draw_img)
@@ -174,7 +179,6 @@ def StandardCamera(cfgfile, weightfile, useGPU):
   #          break
         
     pool.terminate()
-    cap.stop()
     cv2.destroyAllWindows()
         
         
@@ -292,7 +296,7 @@ class FrameThread(Thread):
                 
 ############################################
 if __name__ == '__main__':
-
+    
     AlarmDetector.GlobeCreate() #initializes module level global counters for AlarmDetector.py
 
     ### initialization of program level global variables for: configuration; saving of "falsepositive" images
