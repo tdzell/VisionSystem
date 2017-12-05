@@ -48,6 +48,8 @@ def IDSCamera(cfgfile, weightfile, useGPU):
     num_workers = 2
     pool = Pool(num_workers, IDS_worker, (input_q, output_q, cfgfile, weightfile, useGPU))
     
+
+    
     while loop:
         cv2.waitKey(10)
         image, bboxes = output_q.get()
@@ -147,7 +149,10 @@ def StandardCamera(cfgfile, weightfile, useGPU):
             namesfile = 'C:/Users/Catharina/Documents/GitHub/VisionSystem/data/names'
 
     class_names = load_class_names(namesfile)    
-        
+    
+    cv2.namedWindow('cfgfile', cv2.WND_PROP_FULLSCREEN)          
+    cv2.setWindowProperty('cfgfile', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    
     while True:
         
         res, img = cap.read()
