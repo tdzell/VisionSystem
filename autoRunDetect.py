@@ -1,22 +1,20 @@
-from utils import *
+from utils import plot_boxes_cv2, do_detect, load_class_names
 from darknet import Darknet
 import cv2
 import AlarmDetector
 
-from pyueye import ueye #importing this too early would require IDS camera drivers to be installed just to run the "StandardCamera" code
-from pyueye_example_camera import Camera
-from pyueye_example_utils import *
 import numpy as np
-import multiprocessing
 from multiprocessing import Queue, Pool
 from threading import Thread
-from ctypes import byref
+
 import sharing
 import time
 
 def IDSCamera(cfgfile, weightfile, useGPU):
-        
-
+    from pyueye import ueye #importing this too early would require IDS camera drivers to be installed just to run the "StandardCamera" code
+    from pyueye_example_camera import Camera
+    from pyueye_example_utils import ImageData, Rect, ImageBuffer
+    from ctypes import byref
     ### IDS camera initializations
     cam = Camera()
     cam.init()
@@ -153,7 +151,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
     cv2.namedWindow('cfgfile', cv2.WND_PROP_FULLSCREEN)          
     cv2.setWindowProperty('cfgfile', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     
-    while True
+    while True:
         
         res, img = cap.read()
             
@@ -235,33 +233,14 @@ class FrameThread(Thread):
         self.timeout = 1000
         self.cam = cam
         self.running = True
-        self.views = views
-        self.copy = copy
-        self.m = Darknet(cfgfile)    
-        self.m.print_network()
-        self.m.load_weights(weightfile)
-        self.useGPU = useGPU
+        self.views = views   
         sharing.usegpu = useGPU
         sharing.loop = True
         
-        
         self.input_q = input_q
         self.output_q = output_q
-        
-        
-        if self.m.num_classes == 20:
-            namesfile = 'C:/Users/Catharina/Documents/GitHub/VisionSystem/data/voc.names'
-        elif self.m.num_classes == 80:
-            namesfile = 'C:/Users/Catharina/Documents/GitHub/VisionSystem/data/coco.names'
-        else:
-            namesfile = 'data/names'
-        
-        self.m.class_names = load_class_names(namesfile)
- 
-        
-        if self.useGPU:
-            self.m.cuda()
-        print('Loading weights from %s... Done!' % (weightfile))
+
+		
     def run(self):
 
         while self.running:
@@ -305,8 +284,8 @@ if __name__ == '__main__':
     sharing.saveimage  = False
     sharing.counterimage = 0
     
-    cfgfile = 'C:/Users/Catharina/Documents/GitHub/VisionSystem/cfg/yolo-voc.cfg'
-    weightfile = 'C:/Users/Catharina/Documents/GitHub/VisionSystem/backup/IDSRefined.weights'
+    cfgfile = 'C:/Users/Catharina/Documents/GitHub/VisionSystem/cfg/tiny-yolo-voc.cfg'
+    weightfile = 'C:/Users/Catharina/Documents/GitHub/VisionSystem/tiny-yolo-voc.weights'
     cpuGPU = 'CPU'
     cameraUsage = 'Standard'
         

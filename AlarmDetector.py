@@ -1,5 +1,3 @@
-import numpy as np
-import cv2
 import sharing
 
 def GlobeCreate(): ###initializes all global variables that need to be tracked in this module
@@ -129,7 +127,7 @@ def AlarmDetect(DetectedClasses, ClassNames, imgToBeSaved):
             boltSeen = 1
         else:
             boltSeen = 0 #else no bolts were seen
-        
+            
         if boltExpected != 0:
             if boltSeen > boltExpected:
                 print('||CONFUSED:, %s bolts seen but %s expected' % (boltSeen, boltExpected))
@@ -146,7 +144,6 @@ def AlarmDetect(DetectedClasses, ClassNames, imgToBeSaved):
                 sharing.saveimage = True #mark that the held image should be saved to file by the calling script
                 sharing.savefolder = 'falsepositives'
                 sharing.colorframe = 'red' #mark that a red screen should be returned instead of normal detection feed
-            #cv2.waitKey(0)
         else:
             sharing.colorframe = 'nothing'
             
