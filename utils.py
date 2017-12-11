@@ -1,5 +1,9 @@
+# Python default libraries
 import os
-from math import exp, ceil, floor 
+from math import exp, ceil, floor
+from copy import copy
+    
+# Python external libraries
 import torch
 import numpy as np
 from torch.autograd import Variable
@@ -7,9 +11,11 @@ import cv2
 import struct # get_image_size
 import imghdr # get_image_size
 import sharing
-from copy import copy
 
+# Python modules
 import AlarmDetector
+
+
 
 def createglobal():
     sharing.counterimage = 0
@@ -166,7 +172,7 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
     saveimage = False
     
     colors = torch.FloatTensor([[1,0,1],[0,0,1],[0,1,1],[0,1,0],[1,1,0],[1,0,0]]);
-	
+    
     def get_color(c, x, max_val):
         ratio = float(x)/max_val * 5
         i = int(floor(ratio))
@@ -174,7 +180,7 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
         ratio = ratio - i
         r = (1-ratio) * colors[i][c] + ratio*colors[j][c]
         return int(r*255)
-		
+        
     Detected = []
     width = img.shape[1]
     height = img.shape[0]

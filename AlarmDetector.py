@@ -1,5 +1,6 @@
+# Python modules
 import sharing
-
+    
 def GlobeCreate(): ###initializes all global variables that need to be tracked in this module
 
     
@@ -14,20 +15,29 @@ def GlobeCreate(): ###initializes all global variables that need to be tracked i
     global fourBoltSeen
     fourBoltSeen = 0
     
+	
 
     outerCount = 0
+	
     global oneOuterSeen
     oneOuterSeen = 0
     global twoOuterSeen
     twoOuterSeen = 0
 
     handleCount = 0
+	
     global handleSeen
     handleSeen = 0
     
+	
+	
+	
     global noBoltSeen
     noBoltSeen = 0
     
+	
+	
+	
     global counterimage
     counterimage = 0
 
@@ -101,7 +111,7 @@ def AlarmDetect(DetectedClasses, ClassNames, imgToBeSaved):
     print('no bolt: %s' % (noBoltSeen))
     colorframe = 'nothing'
     
-    if (oneBoltSeen + twoBoltSeen + threeBoltSeen + fourBoltSeen) == 1:
+    if (oneBoltSeen + twoBoltSeen + threeBoltSeen + fourBoltSeen) == 1: #once a bolt has been seen at least once, temporarily store the image so that if a decision is made, the image can be permanently saved
         
         sharing.holdimg = imgToBeSaved
     
@@ -147,7 +157,7 @@ def AlarmDetect(DetectedClasses, ClassNames, imgToBeSaved):
         else:
             sharing.colorframe = 'nothing'
             
-        noBoltSeen = 0
+        noBoltSeen = 0 #reset all global variables in preperation for the next decision that is made
         oneBoltSeen = 0
         twoBoltSeen = 0
         threeBoltSeen = 0
@@ -156,4 +166,4 @@ def AlarmDetect(DetectedClasses, ClassNames, imgToBeSaved):
         twoOuterSeen = 0
         handleSeen = 0
         
-    return colorframe, saveimage
+    return colorframe, saveimage #return whether the image should be overwritten with a solid color, and whether the temporarily stored image should be permanently saved

@@ -1,29 +1,43 @@
-from utils import plot_boxes_cv2, do_detect, load_class_names
-from darknet import Darknet
-import cv2
-import AlarmDetector
-
+# Python external libraries
+import cv2 #OpenCV
 import numpy as np
+
+# Python default libraries
 from multiprocessing import Queue, Pool
 from threading import Thread
-
-import sharing
 import time
 
+# Python modules
+from utils import plot_boxes_cv2, do_detect, load_class_names
+from darknet import Darknet
+import sharing
+import AlarmDetector
+
+
 def IDSCamera(cfgfile, weightfile, useGPU):
+
+    from ctypes import byref
+    
+    # Python external libraries
     from pyueye import ueye #importing this too early would require IDS camera drivers to be installed just to run the "StandardCamera" code
+    
+    # Python modules
     from pyueye_example_camera import Camera
     from pyueye_example_utils import ImageData, Rect, ImageBuffer
-    from ctypes import byref
+    
+    
+    
     ### IDS camera initializations
     cam = Camera()
     cam.init()
     cam.set_colormode(ueye.IS_CM_BGR8_PACKED)
     cam.alloc()
     cam.capture_video() 
+    
+        
+    ### startup of thread that pulls image frames from the IDS camera
     input_q = Queue(8)
     output_q = Queue(8)
-    ### startup of thread that pulls image frames from the IDS camera
     thread = FrameThread(cam, 1, cfgfile, weightfile, useGPU, input_q, output_q)
     thread.start()
     loop = True
@@ -240,7 +254,7 @@ class FrameThread(Thread):
         self.input_q = input_q
         self.output_q = output_q
 
-		
+        
     def run(self):
 
         while self.running:
@@ -304,5 +318,5 @@ if __name__ == '__main__':
         IDSCamera(cfgfile, weightfile, useGPU)
     else:
         StandardCamera(cfgfile, weightfile, useGPU)
-    #demo('cfg/tiny-yolo-voc.cfg', 'tiny-yolo-voc.weights')
+
 
