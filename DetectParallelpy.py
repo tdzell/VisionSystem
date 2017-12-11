@@ -15,7 +15,7 @@ import sharing
 import time
 
 def IDSCamera(cfgfile, weightfile, useGPU):
-        
+    
 
     ### IDS camera initializations
     cam = Camera()
@@ -36,9 +36,9 @@ def IDSCamera(cfgfile, weightfile, useGPU):
     out = cv2.VideoWriter('output.avi',fourcc,5.0,(480, 360))
     
     if m.num_classes == 20:
-            namesfile = 'C:/VisionSystem/data/voc.names'
+            namesfile = 'data/voc.names'
     elif m.num_classes == 80:
-            namesfile = 'C:/VisionSystem/data/coco.names'
+            namesfile = 'data/coco.names'
     else:
             namesfile = 'data/names'
      
@@ -47,9 +47,6 @@ def IDSCamera(cfgfile, weightfile, useGPU):
     
     num_workers = 2
     pool = Pool(num_workers, IDS_worker, (input_q, output_q, cfgfile, weightfile, useGPU))
-    
-    cv2.namedWindow('cfgfile', cv2.WND_PROP_FULLSCREEN)
-    cv2.setWindowProperty('cfgfile', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     
     while loop:
         cv2.waitKey(10)
@@ -143,11 +140,11 @@ def StandardCamera(cfgfile, weightfile, useGPU):
     pool = Pool(num_workers, Standard_worker, (input_q, output_q, cfgfile, weightfile, useGPU))
         
     if m.num_classes == 20:
-            namesfile = 'C:/VisionSystem/data/voc.names'
+            namesfile = 'data/voc.names'
     elif m.num_classes == 80:
-            namesfile = 'C:/VisionSystem/data/coco.names'
+            namesfile = 'data/coco.names'
     else:
-            namesfile = 'C:/VisionSystem/data/names'
+            namesfile = 'data/names'
 
     class_names = load_class_names(namesfile)    
         
@@ -249,9 +246,9 @@ class FrameThread(Thread):
         
         
         if self.m.num_classes == 20:
-            namesfile = 'C:/VisionSystem/data/voc.names'
+            namesfile = 'data/voc.names'
         elif self.m.num_classes == 80:
-            namesfile = 'C:/VisionSystem/data/coco.names'
+            namesfile = 'data/coco.names'
         else:
             namesfile = 'data/names'
         
@@ -304,25 +301,31 @@ if __name__ == '__main__':
     sharing.saveimage  = False
     sharing.counterimage = 0
     
-    cfgfile = 'C:/VisionSystem/cfg/yolo-voc.cfg'
-    weightfile = 'C:/VisionSystem/000830.weights'
-    cpuGPU = 'CPU'
-    cameraUsage = 'IDS'
+    ### exactly four arguments must be present after calling this python script in command prompt for the rest of the script to run
+    if len(sys.argv) == 5:
+        cfgfile = sys.argv[1] #pulling the arguments given from command prompt
+        weightfile = sys.argv[2]
+        cpuGPU = sys.argv[3]
+        cameraUsage = sys.argv[4]
         
-            
-    if cpuGPU == 'GPU':
-        useGPU = True
+        
+        if cpuGPU == 'GPU':
+            useGPU = True
+        else:
+            useGPU = False
+        
+        if useGPU:
+            sharing.usegpu = True
+        else:
+            sharing.usegpu = False
+        
+        if cameraUsage == 'IDS': #If "IDS" is the final argument given, use the IDS Camera code, otherwise use the generic USB camera code
+            IDSCamera(cfgfile, weightfile, useGPU)
+        else:
+            StandardCamera(cfgfile, weightfile, useGPU)
+        #demo('cfg/tiny-yolo-voc.cfg', 'tiny-yolo-voc.weights')
     else:
-        useGPU = False
-    
-    if useGPU:
-        sharing.usegpu = True
-    else:
-        sharing.usegpu = False
-    
-    if cameraUsage == 'IDS': #If "IDS" is the final argument given, use the IDS Camera code, otherwise use the generic USB camera code
-        IDSCamera(cfgfile, weightfile, useGPU)
-    else:
-        StandardCamera(cfgfile, weightfile, useGPU)
-    #demo('cfg/tiny-yolo-voc.cfg', 'tiny-yolo-voc.weights')
-
+        print('Usage:')
+        print('    python demo.py cfgfile weightfile')
+        print('')
+        print('    perform detection on camera')
