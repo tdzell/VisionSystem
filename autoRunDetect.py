@@ -56,7 +56,7 @@ def IDSCamera(cfgfile, weightfile, useGPU):
      
         
     class_names = load_class_names(namesfile)
-    
+     
     num_workers = 2
     pool = Pool(num_workers, IDS_worker, (input_q, output_q, cfgfile, weightfile, useGPU))
     
@@ -144,7 +144,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
     if not cap.isOpened():
         print("Unable to open camera")
         exit(-1)
-####################
+
     num_workers = 2
     input_q = Queue(4)
     output_q = Queue(4)
@@ -193,8 +193,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
     pool.terminate()
     cv2.destroyAllWindows()
         
-        
-#####################        
+           
     
 def Standard_worker(input_q, output_q, cfgfile, weightfile, useGPU):
     
@@ -232,7 +231,7 @@ def Standard_worker(input_q, output_q, cfgfile, weightfile, useGPU):
         output_q.put((img, do_detect(m, sized, 0.4, 0.4, useGPU)))
             
 
-    #################################################
+
 
         
     
@@ -240,7 +239,7 @@ def Standard_worker(input_q, output_q, cfgfile, weightfile, useGPU):
     
     
     
-  ###########################################################  
+
 class FrameThread(Thread):
     def __init__(self, cam, views, cfgfile, weightfile, useGPU, input_q, output_q, copy=True):
         super(FrameThread, self).__init__()
@@ -287,7 +286,7 @@ class FrameThread(Thread):
         self.running = False
         
                 
-############################################
+
 if __name__ == '__main__':
     
     AlarmDetector.GlobeCreate() #initializes module level global counters for AlarmDetector.py
