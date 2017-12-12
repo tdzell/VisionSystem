@@ -113,7 +113,7 @@ How do I adjust what happens when an "alarm code" is sent?
 
 #######################Resources#######################
 
-###General
+### General
 	
 	github for code as of time of writing: https://github.com/tdzell/VisionSystem
 	
@@ -140,7 +140,7 @@ How do I adjust what happens when an "alarm code" is sent?
 	OpenCV optimizations on RasPi: https://www.pyimagesearch.com/2017/10/09/optimizing-opencv-on-the-raspberry-pi/
 
 	
-###Tensorflow
+### Tensorflow
 	
 	Tensorflow: https://www.tensorflow.org/
 	
