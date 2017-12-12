@@ -133,14 +133,14 @@ How do I adjust what happens when an "alarm code" is sent?
 	PyTorch on Windows: https://anaconda.org/peterjc123/pytorch
 
 	
-###OpenCV on RasPi
+### OpenCV on RasPi
 	
 	OpenCV on RasPi: https://www.pyimagesearch.com/2016/04/18/install-guide-raspberry-pi-3-raspbian-jessie-opencv-3/
 
 	OpenCV optimizations on RasPi: https://www.pyimagesearch.com/2017/10/09/optimizing-opencv-on-the-raspberry-pi/
 
 	
-### Tensorflow
+###Tensorflow
 	
 	Tensorflow: https://www.tensorflow.org/
 	
@@ -151,14 +151,14 @@ How do I adjust what happens when an "alarm code" is sent?
 	Real-time video implementation of Detection API: https://towardsdatascience.com/building-a-real-time-object-recognition-app-with-tensorflow-and-opencv-b7a2b4ebdc32
 
 	
-###Differences between Python 2 and 3:
+### Differences between Python 2 and 3:
 	
 	Python 2 uses / for division to integer without remainder, Python 3 implementation is //
 	
 	The format for the print function in Python 2 is different from the print function format in Python 3
 
 	
-###Useful Linux Commands:
+### Useful Linux Commands:
 	
 	"cd": change directory, follow command with folder to move into
 	
@@ -171,7 +171,7 @@ How do I adjust what happens when an "alarm code" is sent?
 	"source activate [enviroment]": begin using an already created Python enviroment -- the current RasPi enviroment for PyTorch is "torch", so "source activate torch"
 
 	
-###Useful Python Commands:
+### Useful Python Commands:
 	
 	"pip install [filename]" install a .whl file to add a Python library. If not connected to internet, all library dependencies will need to already be installed. Pip installs outside of a virtual enviroment are available to all enviroments.
 	
