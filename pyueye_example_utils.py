@@ -31,7 +31,10 @@
 #------------------------------------------------------------------------------
 
 from pyueye import ueye
+from threading import Thread
 from ctypes import byref
+import cv2
+import time
 
 def get_bits_per_pixel(color_mode):
     """
@@ -130,3 +133,45 @@ class Rect:
         self.y = y
         self.width = width
         self.height = height
+
+
+
+class FrameThread(Thread):
+    def __init__(self, cam, views=None, copy=True):
+        super(FrameThread, self).__init__()
+        self.timeout = 1000
+        self.cam = cam
+        self.running = True
+        self.views = views
+        self.copy = copy
+
+    def run(self):
+
+        while self.running:
+            img_buffer = ImageBuffer()
+            ret = ueye.is_WaitForNextImage(self.cam.handle(),
+                                           self.timeout,
+                                           img_buffer.mem_ptr,
+                                           img_buffer.mem_id)
+										   
+            if ret == ueye.IS_SUCCESS:
+                self.notify(ImageData(self.cam.handle(), img_buffer))
+
+
+    def notify(self, image_data):
+
+        if self.views:
+            if type(self.views) is not list:
+                self.views = [self.views]
+            
+            for view in self.views:
+ 
+                image = image_data.as_1d_image()
+                cv2.imshow('works?', image)
+                image_data.unlock()
+                cv2.waitKey(200)
+
+
+    def stop(self):
+        self.cam.stop_video()
+        self.running = False
