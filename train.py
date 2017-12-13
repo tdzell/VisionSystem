@@ -50,7 +50,7 @@ steps         = [float(step) for step in net_options['steps'].split(',')]
 scales        = [float(scale) for scale in net_options['scales'].split(',')]
 
 #Train parameters
-max_epochs    = max_batches*batch_size//nsamples+1
+max_epochs    = (max_batches*batch_size)//(nsamples+1)
 sharing.usegpu     = False
 seed          = int(time.time())
 eps           = 1e-5
@@ -244,8 +244,8 @@ def test(epoch):
     precision = 1.0*correct/(proposals+eps)
     recall = 1.0*correct/(total+eps)
     fscore = 2.0*precision*recall/(precision+recall+eps)
-    logging("precision: %f, recall: %f, fscore: %f" % (precision, recall, fscore))
-
+    #logging("precision: %f, recall: %f, fscore: %f" % (precision, recall, fscore))
+init_epoch = 0
 evaluate = False
 if evaluate:
     logging('evaluating ...')

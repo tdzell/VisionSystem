@@ -380,4 +380,5 @@ def get_image_size(fname):
             return
         return width, height
 
-
+def logging(message):
+    print('%s %s' % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), message))

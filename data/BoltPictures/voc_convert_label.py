@@ -6,7 +6,7 @@ from os.path import join
 
 sets=['train', 'val']
 
-classes = ["bolt", "InnerHandle", "OuterPresent", "OuterSign", "OuterSign2", "recess", "nobolt", "FALSE"]
+classes = ["go", "no_go"]
 
 
 def convert(size, box):
@@ -24,7 +24,7 @@ def convert(size, box):
     return (x,y,w,h)
 
 def convert_annotation(image_id):
-    in_file = open('Training_Annotations/%s.xml'%(image_id))
+    in_file = open("Training_Annotations/%s.xml"%(image_id))
     out_file = open('labels/%s.txt'%(image_id), 'w')
     tree=ET.parse(in_file)
     root = tree.getroot()
@@ -41,7 +41,7 @@ def convert_annotation(image_id):
         xmlbox = obj.find('bndbox')
         b = (float(xmlbox.find('xmin').text), float(xmlbox.find('xmax').text), float(xmlbox.find('ymin').text), float(xmlbox.find('ymax').text))
         bb = convert((w,h), b)
-        out_file.write(str(cls_id) + " " + " ".join([str(a) for a in bb]) + '\n')
+        out_file.write(str(cls_id) + " " + " ".join([str(a) for a in bb]) + '/n')
 
 wd = getcwd()
 
@@ -51,8 +51,7 @@ for image_set in sets:
     image_ids = open('ImageSets/Main/%s.txt'%(image_set)).read().strip().split()
     list_file = open('%s.txt'%(image_set), 'w')
     for image_id in image_ids:
-        list_file.write('%s/Training_Images/%s.jpg\n'%(wd, image_id))
-        convert_annotation(image_id)
+        list_file.write('%s/Training_Images/%s.jpg/n'%(wd, image_id))
         convert_annotation(image_id)
     list_file.close()
 
