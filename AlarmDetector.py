@@ -7,7 +7,7 @@ def SoundAlarm():
 
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(14, GPIO.OUT, initial=GPIO.LOW)
-GPIO.output(14, 1)    
+GPIO.output(14, 1)	
 cv2.waitKey(250)
 GPIO.output(14, 0)
 GPIO.cleanup()
@@ -62,7 +62,6 @@ def AlarmDetect(DetectedClasses, ClassNames, imgToBeSaved):
     
     Counter = [[],[]] #initialization of a list so that it can be appended
     
-    saveimage = False
     
     for Name in ClassNames: # initialize structure for the list
         
@@ -78,6 +77,7 @@ def AlarmDetect(DetectedClasses, ClassNames, imgToBeSaved):
     outerCount = Counter[1][2]
     handleCount = Counter[1][1] 
     
-    if boltCount > 0 :
+        if boltCount > 0 :
         SoundAlarm()
         
+    return 'nothing', False
