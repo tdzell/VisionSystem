@@ -6,6 +6,7 @@ import numpy as np
 from multiprocessing import Queue, Pool
 from threading import Thread
 import time
+import glob
 
 # Python modules
 from utils import plot_boxes_cv2, do_detect, load_class_names
@@ -148,9 +149,9 @@ def StandardCamera(cfgfile, weightfile, useGPU):
     num_workers = 1
     input_q = Queue(4)
     output_q = Queue(4)
-    res, img = cap.read()
+
             
-    input_q.put(img)  
+ 
     pool = Pool(num_workers, Standard_worker, (input_q, output_q, cfgfile, weightfile, useGPU))
         
     if m.num_classes == 20:
@@ -165,10 +166,9 @@ def StandardCamera(cfgfile, weightfile, useGPU):
     cv2.namedWindow('cfgfile', cv2.WND_PROP_FULLSCREEN)          
     cv2.setWindowProperty('cfgfile', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     
-    while True:
+    for imgname in glob.glob('*.jpg'):
         
-        res, img = cap.read()
-            
+        img = cv2.imread(imgname,1)   
         input_q.put(img)
         
         img, bboxes = output_q.get()
@@ -177,7 +177,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
         cv2.imshow('cfgfile', draw_img) #show the image frame that now has detections drawn onto it | draw_image will be entirely green/yellow/red after a judgement is made by AlarmDetection.py for verification or alarm
         
         '''uncomment the following line to record video | file is named output.avi and will overwrite any existing files with same name'''        
-        #out.write(draw_img)
+        cv2.imwrite("DrawnHold/drawn_" + imgname,img)
         
         if waitsignal == True: #if green/yellow/red screen is being shown by draw_img, leave it in place for two seconds instead of continuing detections
             cv2.waitKey(2000)
