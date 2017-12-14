@@ -244,7 +244,7 @@ def test(epoch):
     precision = 1.0*correct/(proposals+eps)
     recall = 1.0*correct/(total+eps)
     fscore = 2.0*precision*recall/(precision+recall+eps)
-    #logging("precision: %f, recall: %f, fscore: %f" % (precision, recall, fscore))
+    logging("precision: %f, recall: %f, fscore: %f" % (precision, recall, fscore))
 init_epoch = 0
 evaluate = False
 if evaluate:
