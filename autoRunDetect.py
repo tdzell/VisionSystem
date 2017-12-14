@@ -145,7 +145,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
         print("Unable to open camera")
         exit(-1)
 
-    num_workers = 2
+    num_workers = 1
     input_q = Queue(4)
     output_q = Queue(4)
     res, img = cap.read()
@@ -174,7 +174,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
         img, bboxes = output_q.get()
         print('------')
         draw_img, waitsignal = plot_boxes_cv2(img, bboxes, None, class_names) #draw boxes associated with detections onto the base images | AlarmDetection.py is called in here
-        #cv2.imshow('cfgfile', draw_img) #show the image frame that now has detections drawn onto it | draw_image will be entirely green/yellow/red after a judgement is made by AlarmDetection.py for verification or alarm
+        cv2.imshow('cfgfile', draw_img) #show the image frame that now has detections drawn onto it | draw_image will be entirely green/yellow/red after a judgement is made by AlarmDetection.py for verification or alarm
         
         '''uncomment the following line to record video | file is named output.avi and will overwrite any existing files with same name'''        
         #out.write(draw_img)
@@ -297,9 +297,9 @@ if __name__ == '__main__':
     sharing.saveimage  = False
     sharing.counterimage = 0
     
-    cfgfile = 'C:/Users/Catharina/Documents/GitHub/VisionSystem/cfg/tiny-yolo-voc.cfg'
-    weightfile = 'C:/Users/Catharina/Documents/GitHub/VisionSystem/tiny-yolo-voc.weights'
-    cpuGPU = 'CPU'
+    cfgfile = 'C:/Users/Catharina/Documents/GitHub/VisionSystem/cfg/yolo-voc.cfg'
+    weightfile = 'C:/Users/Catharina/Documents/GitHub/VisionSystem/yolo-voc.weights'
+    cpuGPU = 'GPU'
     cameraUsage = 'Standard'
         
             

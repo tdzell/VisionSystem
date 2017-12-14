@@ -210,7 +210,7 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
                 rgb = (red, green, blue)
             img = cv2.putText(img, class_names[cls_id], (x1,y1), cv2.FONT_HERSHEY_SIMPLEX, 1.2, rgb, 1)
         img = cv2.rectangle(img, (x1,y1), (x2,y2), rgb, 1)
-    
+    '''
     if Detected:
         AlarmDetector.AlarmDetect(Detected, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], imgToBeSaved) #if there were detections, pass them to AlarmDetector.py
     else:
@@ -241,7 +241,8 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
     if savename:
         print("save plot results to %s" % savename)
         cv2.imwrite(savename, img)
-    return img, waitsignal
+    '''  
+    return img, False
 
 
 def read_truths(lab_path):
