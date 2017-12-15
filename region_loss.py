@@ -35,7 +35,7 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
             gw = target[b][t*5+3]*nW
             gh = target[b][t*5+4]*nH
             cur_gt_boxes = torch.FloatTensor([gx,gy,gw,gh]).repeat(nAnchors,1).t()
-            cur_ious = torch.max(cur_ious, bbox_ious(cur_pred_boxes, cur_gt_boxes, x1y1x2y2=False))
+            cur_ious = torch.max(cur_ious, bbox_ious(cur_pred_boxes, cur_gt_boxes))
         conf_mask[b][cur_ious>sil_thresh] = 0
     if seen < 12800:
        if anchor_step == 4:
@@ -69,7 +69,7 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
                 aw = anchors[anchor_step*n]
                 ah = anchors[anchor_step*n+1]
                 anchor_box = [0, 0, aw, ah]
-                iou  = bbox_iou(anchor_box, gt_box, x1y1x2y2=False)
+                iou  = bbox_iou(anchor_box, gt_box)
                 if anchor_step == 4:
                     ax = anchors[anchor_step*n+2]
                     ay = anchors[anchor_step*n+3]
@@ -92,7 +92,7 @@ def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW,
             ty[b][best_n][gj][gi] = target[b][t*5+2] * nH - gj
             tw[b][best_n][gj][gi] = math.log(gw/anchors[anchor_step*best_n])
             th[b][best_n][gj][gi] = math.log(gh/anchors[anchor_step*best_n+1])
-            iou = bbox_iou(gt_box, pred_box, x1y1x2y2=False) # best_iou
+            iou = bbox_iou(gt_box, pred_box) # best_iou
             tconf[b][best_n][gj][gi] = iou
             tcls[b][best_n][gj][gi] = target[b][t*5]
             if iou > 0.5:
