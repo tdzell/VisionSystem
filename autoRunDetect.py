@@ -166,7 +166,7 @@ def StandardCamera(cfgfile, weightfile, useGPU):
     cv2.namedWindow('cfgfile', cv2.WND_PROP_FULLSCREEN)          
     cv2.setWindowProperty('cfgfile', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     
-    for imgname in glob.glob('*.bmp'):
+    for imgname in glob.glob('*.jpg'):
         
         img = cv2.imread(imgname,1)   
         input_q.put(img)
@@ -298,7 +298,7 @@ if __name__ == '__main__':
     sharing.counterimage = 0
     
     cfgfile = 'C:/Users/Catharina/Documents/GitHub/VisionSystem/cfg/yolo-voc.cfg'
-    weightfile = 'C:/Users/Catharina/Documents/GitHub/VisionSystem/HenrikTest2.weights'
+    weightfile = 'C:/Users/Catharina/Documents/GitHub/VisionSystem/000170.weights'
     cpuGPU = 'GPU'
     cameraUsage = 'Standard'
         
